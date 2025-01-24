@@ -40,7 +40,10 @@ Potential vulnerability detected with payload: ' OR 1=1 --
 ' OR 1=1 --
 ' OR 1=2 --
 ' AND 'x'='x' --
-Contact For any questions or contributions, feel free to reach out:
+## Contribution
+Contributions are welcome! If you have ideas for enhancements or bug fixes, feel free to open an issue or submit a pull request.
 
-Email: abdelrahman.emira311@gmail.com 
+## Contact
+For any questions or contributions, feel free to reach out:
+Email: abdelrahman.emira311@gmail.com
 LinkedIn: www.linkedin.com/in/abdelrahman-emira-48b187239
